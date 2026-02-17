@@ -64,7 +64,8 @@ app.get('/', (req, res) => {
 // ==============================
 // 🔐 AREA ADMIN
 // ==============================
-app.post('/admin/login', (req, res) => {
+// LOGIN ADMIN
+app.post(`${SECRET_PATH}/admin/login`, (req, res) => {
   const { password } = req.body;
 
   if (password === ADMIN_PASSWORD) {
