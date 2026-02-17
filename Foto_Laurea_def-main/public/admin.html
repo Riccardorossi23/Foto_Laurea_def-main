@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestione Foto</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- LOGIN -->
+        <div id="loginSection" class="login-box">
+            <h2>🔐 Admin Login</h2>
+            <div id="errorMessage" class="error-message"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn-primary">Accedi</button>
+            </form>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div id="adminPanel" class="admin-panel">
+            <div class="admin-header">
+                <h1>📸 Gestione Foto</h1>
+                <button class="btn-logout" onclick="logout()">Esci</button>
+            </div>
+
+            <!-- UPLOAD SECTION -->
+            <div class="upload-section">
+                <h2>📤 Carica Nuove Foto</h2>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" multiple accept="image/*">
+                    <label for="fileInput" class="file-input-label">
+                        🖼️ Clicca qui per selezionare le foto<br>
+                        <small>(Puoi selezionare più file contemporaneamente)</small>
+                    </label>
+                </div>
+                <div id="selectedFiles" class="selected-files"></div>
+                <button id="uploadBtn" class="btn-upload" onclick="uploadPhotos()">Carica Foto</button>
+                <div id="progressBar" class="progress-bar">
+                    <div id="progressFill" class="progress-fill">0%</div>
+                </div>
+                <div id="successMessage" class="success-message"></div>
+            </div>
+
+            <!-- PHOTOS SECTION -->
+            <div class="photos-section">
+                <h2>🖼️ Foto Esistenti (<span id="photoCount">0</span>)</h2>
+                <div id="photosGrid" class="photos-grid">
+                    <div style="grid-column: 1/-1; text-align: center; color: #001f3f;">
+                        Caricamento foto...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "foto-laurea",
+  "version": "1.0.0",
+  "description": "Galleria foto di laurea con download individuale",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "photo",
+    "gallery",
+    "graduation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.22.1",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
