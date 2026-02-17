@@ -6,25 +6,31 @@ const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware JSON
 app.use(express.json());
 
 // ==============================
 // 🔐 CONFIGURAZIONE
 // ==============================
-const SECRET_PATH = '/laurea-Red_Richard'; 
+const SECRET_PATH = '/laurea-Red_Richard';
 const EXPIRATION_DATE = new Date('2026-03-02T23:59:59');
-const ADMIN_PASSWORD = 'admin123'; // ⚠️ Meglio metterla in variabile ambiente
+const ADMIN_PASSWORD = 'admin123';
+
+// ==============================
+// 📂 PERCORSO PUBLIC CORRETTO
+// ==============================
+const PUBLIC_PATH = path.join(__dirname, '../public');
 
 // ==============================
 // 📂 CONFIGURAZIONE MULTER
 // ==============================
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'public', 'foto');
+    const uploadDir = path.join(PUBLIC_PATH, 'foto');
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
+
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
@@ -34,9 +40,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024
-  },
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -51,10 +55,10 @@ const upload = multer({
 });
 
 // ==============================
-// 🔁 REDIRECT HOMEPAGE
+// 🔁 HOMEPAGE REDIRECT
 // ==============================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.redirect(SECRET_PATH);
 });
 
 // ==============================
@@ -66,7 +70,7 @@ app.post('/admin/login', (req, res) => {
   if (password === ADMIN_PASSWORD) {
     res.json({ success: true });
   } else {
-    res.status(401).json({ success: false, message: 'Password errata' });
+    res.status(401).json({ success: false });
   }
 });
 
@@ -79,7 +83,7 @@ app.get('/admin-script.js', (req, res) => {
 });
 
 app.get('/admin/photos', (req, res) => {
-  const photosDir = path.join(__dirname, 'public', 'foto');
+  const photosDir = path.join(PUBLIC_PATH, 'foto');
 
   if (!fs.existsSync(photosDir)) {
     return res.json([]);
@@ -98,7 +102,7 @@ app.get('/admin/photos', (req, res) => {
 
 app.post('/admin/upload', upload.array('photos', 50), (req, res) => {
   if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ success: false, message: 'Nessun file caricato' });
+    return res.status(400).json({ success: false });
   }
 
   res.json({
@@ -109,17 +113,14 @@ app.post('/admin/upload', upload.array('photos', 50), (req, res) => {
 });
 
 app.delete('/admin/delete/:filename', (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(__dirname, 'public', 'foto', filename);
+  const filePath = path.join(PUBLIC_PATH, 'foto', req.params.filename);
 
   if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ success: false, message: 'File non trovato' });
+    return res.status(404).json({ success: false });
   }
 
   fs.unlink(filePath, (err) => {
-    if (err) {
-      return res.status(500).json({ success: false, message: 'Errore durante eliminazione' });
-    }
+    if (err) return res.status(500).json({ success: false });
     res.json({ success: true });
   });
 });
@@ -129,24 +130,24 @@ app.delete('/admin/delete/:filename', (req, res) => {
 // ==============================
 app.use(SECRET_PATH, (req, res, next) => {
   if (new Date() > EXPIRATION_DATE) {
-    return res.sendFile(path.join(__dirname, 'public', 'scaduto.html'));
+    return res.sendFile(path.join(PUBLIC_PATH, 'scaduto.html'));
   }
   next();
 });
 
 // ==============================
-// 📂 FILE STATICI PUBBLICI
+// 📂 FILE STATICI
 // ==============================
 app.use(
   SECRET_PATH,
-  express.static(path.join(__dirname, 'public'))
+  express.static(PUBLIC_PATH)
 );
 
 // ==============================
 // 📸 API FOTO PUBBLICHE
 // ==============================
 app.get(`${SECRET_PATH}/api/photos`, (req, res) => {
-  const photosDir = path.join(__dirname, 'public', 'foto');
+  const photosDir = path.join(PUBLIC_PATH, 'foto');
 
   if (!fs.existsSync(photosDir)) {
     return res.json([]);
@@ -167,7 +168,7 @@ app.get(`${SECRET_PATH}/api/photos`, (req, res) => {
 // ⬇ DOWNLOAD FOTO
 // ==============================
 app.get(`${SECRET_PATH}/download/:filename`, (req, res) => {
-  const filePath = path.join(__dirname, 'public', 'foto', req.params.filename);
+  const filePath = path.join(PUBLIC_PATH, 'foto', req.params.filename);
 
   if (!fs.existsSync(filePath)) {
     return res.status(404).send('Foto non trovata');
@@ -179,17 +180,17 @@ app.get(`${SECRET_PATH}/download/:filename`, (req, res) => {
 // ==============================
 // 🚫 BLOCCA TUTTO IL RESTO
 // ==============================
-app.use((req, res) => { res.status(404).send('⛔ Accesso non consentito'); });
+app.use((req, res) => {
+  res.status(404).send('⛔ Accesso non consentito');
+});
 
 // ==============================
 // ▶ START SERVER
 // ==============================
 app.listen(PORT, () => {
   console.log(`✔ Server avviato sulla porta ${PORT}`);
-  console.log(`🌍 Dominio: https://foto-laurea-def.onrender.com`);
-  console.log(`🔗 Link evento: https://foto-laurea-def.onrender.com${SECRET_PATH}`);
+  console.log(`🔗 Link evento: http://localhost:${PORT}${SECRET_PATH}`);
 });
-
 
 /*
 const express = require('express');
