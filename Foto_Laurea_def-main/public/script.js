@@ -61,26 +61,25 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPhotos();
 });*/
 // ==============================
-// CONFIGURAZIONE
+// 🔹 CONFIGURAZIONE
 // ==============================
-const SECRET_PATH = '/laurea-Red_Richard'; // Path segreto sul server
-const ADMIN_PASSWORD = 'admin123'; // Cambia la password admin!
+const SECRET_PATH = '/laurea-Red_Richard';
+let filesToUpload = [];
 
 // ==============================
-// FUNZIONI GALLERIA PUBBLICA
+// 🔹 GALLERIA PUBBLICA
 // ==============================
 async function loadPhotos() {
     try {
         const response = await fetch(`${SECRET_PATH}/api/photos`);
         const photos = await response.json();
-        
+
         const gallery = document.getElementById('gallery');
-        
         if (!photos || photos.length === 0) {
             gallery.innerHTML = '<div class="loading">Nessuna foto trovata</div>';
             return;
         }
-        
+
         gallery.innerHTML = photos.map(photo => `
             <div class="photo-card">
                 <div class="photo-container" onclick="openModal('${photo}')">
@@ -118,11 +117,8 @@ function closeModal() {
 }
 
 // ==============================
-// FUNZIONI AREA ADMIN
+// 🔹 ADMIN
 // ==============================
-let filesToUpload = [];
-
-// Login admin
 async function handleAdminLogin(e) {
     e.preventDefault();
     const password = document.getElementById('password').value;
@@ -152,7 +148,6 @@ function showError(message) {
     const errorMessage = document.getElementById('errorMessage');
     errorMessage.textContent = message;
     errorMessage.style.display = 'block';
-
     setTimeout(() => {
         errorMessage.style.display = 'none';
     }, 3000);
@@ -169,7 +164,9 @@ function logout() {
     location.reload();
 }
 
-// Selezione file
+// ==============================
+// 🔹 FILE SELEZIONE & UPLOAD
+// ==============================
 function handleFileSelect(e) {
     const selectedFiles = document.getElementById('selectedFiles');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -181,7 +178,7 @@ function handleFileSelect(e) {
             <div style="font-weight:600;margin-bottom:10px;">
                 File selezionati: ${filesToUpload.length}
             </div>
-            ${filesToUpload.map(file => `<div>📸 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</div>`).join('')}
+            ${filesToUpload.map(file => `<div>📸 ${file.name}</div>`).join('')}
         `;
         selectedFiles.classList.add('show');
         uploadBtn.classList.add('show');
@@ -191,16 +188,11 @@ function handleFileSelect(e) {
     }
 }
 
-// Upload
 async function uploadPhotos() {
     if (filesToUpload.length === 0) {
         alert('Seleziona almeno una foto!');
         return;
     }
-
-    const uploadBtn = document.getElementById('uploadBtn');
-    uploadBtn.disabled = true;
-    uploadBtn.textContent = 'Caricamento in corso...';
 
     const formData = new FormData();
     filesToUpload.forEach(file => formData.append('photos', file));
@@ -210,35 +202,37 @@ async function uploadPhotos() {
             method: 'POST',
             body: formData
         });
-
         const data = await response.json();
 
         if (data.success) {
-            alert(`✅ Caricate ${data.uploaded} foto`);
-            resetUpload();
+            alert(`Caricate ${data.uploaded} foto`);
             loadAdminPhotos();
+            resetUpload();
         } else {
             alert('Errore upload');
-            resetUpload();
         }
 
     } catch (error) {
         alert('Errore: ' + error.message);
-        resetUpload();
     }
 }
 
 function resetUpload() {
-    filesToUpload = [];
-    document.getElementById('fileInput').value = '';
-    document.getElementById('selectedFiles').classList.remove('show');
     const uploadBtn = document.getElementById('uploadBtn');
-    uploadBtn.classList.remove('show');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFiles = document.getElementById('selectedFiles');
+
     uploadBtn.disabled = false;
     uploadBtn.textContent = 'Carica Foto';
+    fileInput.value = '';
+    filesToUpload = [];
+    selectedFiles.classList.remove('show');
+    uploadBtn.classList.remove('show');
 }
 
-// Carica foto admin
+// ==============================
+// 🔹 CARICA FOTO ADMIN
+// ==============================
 async function loadAdminPhotos() {
     try {
         const response = await fetch(`${SECRET_PATH}/admin/photos`);
@@ -262,60 +256,45 @@ async function loadAdminPhotos() {
         `).join('');
 
     } catch (error) {
-        console.error('Errore caricamento foto admin:', error);
+        console.error(error);
     }
 }
 
-// Elimina foto
 async function deletePhoto(filename) {
     if (!confirm(`Eliminare ${filename}?`)) return;
 
     try {
-        const response = await fetch(`${SECRET_PATH}/admin/delete/${filename}`, {
-            method: 'DELETE'
-        });
-
+        const response = await fetch(`${SECRET_PATH}/admin/delete/${filename}`, { method: 'DELETE' });
         const data = await response.json();
 
         if (data.success) {
             loadAdminPhotos();
-        } else {
-            alert('Errore eliminazione');
         }
 
     } catch (error) {
-        alert('Errore eliminazione: ' + error.message);
+        alert('Errore eliminazione');
     }
 }
 
 // ==============================
-// INIZIALIZZAZIONE
+// 🔹 INIT
 // ==============================
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     // Galleria pubblica
     if (document.getElementById('gallery')) {
         loadPhotos();
-
         const modal = document.getElementById('modal');
-        if (modal) {
-            modal.addEventListener('click', function (e) {
-                if (e.target === this) closeModal();
-            });
-        }
+        if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
     }
 
     // Admin
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        if (sessionStorage.getItem('adminAuth') === 'true') {
-            showAdminPanel();
-        }
-
+        if (sessionStorage.getItem('adminAuth') === 'true') showAdminPanel();
         loginForm.addEventListener('submit', handleAdminLogin);
 
         const fileInput = document.getElementById('fileInput');
-        if (fileInput) {
-            fileInput.addEventListener('change', handleFileSelect);
-        }
+        if (fileInput) fileInput.addEventListener('change', handleFileSelect);
     }
 });
+
