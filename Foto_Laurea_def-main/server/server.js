@@ -192,7 +192,6 @@ app.listen(PORT, () => {
   console.log(`🔗 Link evento: http://localhost:${PORT}${SECRET_PATH}`);
 });
 
-
 /*
 const express = require('express');
 const path = require('path');
