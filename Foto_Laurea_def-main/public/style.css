@@ -878,3 +878,23 @@ h1 {
         padding: 30px 20px;
     }
 }
+/* PULSANTE ADMIN IN ALTO A SINISTRA */
+.admin-button {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #dc3545;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    z-index: 2000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: background 0.3s;
+}
+
+.admin-button:hover {
+    background: #c82333;
+}
+
