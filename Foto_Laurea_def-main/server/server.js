@@ -190,6 +190,7 @@ app.listen(PORT, () => {
   console.log(`🔗 Link evento: https://foto-laurea-def.onrender.com${SECRET_PATH}`);
 });
 
+
 /*
 const express = require('express');
 const path = require('path');
