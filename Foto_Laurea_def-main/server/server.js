@@ -181,7 +181,7 @@ app.get(`${SECRET_PATH}/download/:filename`, (req, res) => {
 // 🚫 BLOCCA TUTTO IL RESTO
 // ==============================
 app.use((req, res) => {
-  res.status(404).send('⛔ Accesso non consentito');
+  res.status(404).send('Accesso non consentito');
 });
 
 // ==============================
