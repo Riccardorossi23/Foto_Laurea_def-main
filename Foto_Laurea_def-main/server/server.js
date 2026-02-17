@@ -53,9 +53,7 @@ const upload = multer({
 // ==============================
 // 🔁 REDIRECT HOMEPAGE
 // ==============================
-app.get('/', (req, res) => {
-  res.redirect(SECRET_PATH);
-});
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 // ==============================
 // 🔐 AREA ADMIN
@@ -179,9 +177,7 @@ app.get(`${SECRET_PATH}/download/:filename`, (req, res) => {
 // ==============================
 // 🚫 BLOCCA TUTTO IL RESTO
 // ==============================
-app.use((req, res) => {
-  res.status(404).send('⛔ Accesso non consentito');
-});
+app.use((req, res) => { res.status(404).send('⛔ Accesso non consentito'); });
 
 // ==============================
 // ▶ START SERVER
