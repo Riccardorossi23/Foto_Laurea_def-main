@@ -161,8 +161,10 @@ function showAdminPanel() {
 
 function logout() {
     sessionStorage.removeItem('adminAuth');
-    location.reload();
+    // Reindirizza alla homepage pubblica
+    window.location.href = `${SECRET_PATH}/`; // oppure './index.html' se preferisci
 }
+
 
 // ==============================
 // 🔹 FILE SELEZIONE & UPLOAD
