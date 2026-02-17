@@ -61,12 +61,17 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPhotos();
 });*/
 // ==============================
+// CONFIGURAZIONE
+// ==============================
+const SECRET_PATH = '/laurea-Red_Richard'; // Path segreto sul server
+const ADMIN_PASSWORD = 'admin123'; // Cambia la password admin!
+
+// ==============================
 // FUNZIONI GALLERIA PUBBLICA
 // ==============================
-
 async function loadPhotos() {
     try {
-        const response = await fetch('./api/photos');
+        const response = await fetch(`${SECRET_PATH}/api/photos`);
         const photos = await response.json();
         
         const gallery = document.getElementById('gallery');
@@ -79,7 +84,7 @@ async function loadPhotos() {
         gallery.innerHTML = photos.map(photo => `
             <div class="photo-card">
                 <div class="photo-container" onclick="openModal('${photo}')">
-                    <img src="./foto/${photo}" alt="${photo}" loading="lazy">
+                    <img src="${SECRET_PATH}/foto/${photo}" alt="${photo}" loading="lazy">
                 </div>
                 <div class="photo-info">
                     <div class="photo-name">${photo}</div>
@@ -98,13 +103,13 @@ async function loadPhotos() {
 }
 
 function downloadPhoto(filename) {
-    window.location.href = `./download/${filename}`;
+    window.location.href = `${SECRET_PATH}/download/${filename}`;
 }
 
 function openModal(filename) {
     const modal = document.getElementById('modal');
     const modalImage = document.getElementById('modalImage');
-    modalImage.src = `./foto/${filename}`;
+    modalImage.src = `${SECRET_PATH}/foto/${filename}`;
     modal.classList.add('active');
 }
 
@@ -115,7 +120,6 @@ function closeModal() {
 // ==============================
 // FUNZIONI AREA ADMIN
 // ==============================
-
 let filesToUpload = [];
 
 // Login admin
@@ -124,7 +128,7 @@ async function handleAdminLogin(e) {
     const password = document.getElementById('password').value;
 
     try {
-        const response = await fetch('./admin/login', {
+        const response = await fetch(`${SECRET_PATH}/admin/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password })
@@ -177,9 +181,7 @@ function handleFileSelect(e) {
             <div style="font-weight:600;margin-bottom:10px;">
                 File selezionati: ${filesToUpload.length}
             </div>
-            ${filesToUpload.map(file => `
-                <div>📸 ${file.name}</div>
-            `).join('')}
+            ${filesToUpload.map(file => `<div>📸 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</div>`).join('')}
         `;
         selectedFiles.classList.add('show');
         uploadBtn.classList.add('show');
@@ -191,19 +193,20 @@ function handleFileSelect(e) {
 
 // Upload
 async function uploadPhotos() {
-
     if (filesToUpload.length === 0) {
         alert('Seleziona almeno una foto!');
         return;
     }
 
+    const uploadBtn = document.getElementById('uploadBtn');
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = 'Caricamento in corso...';
+
     const formData = new FormData();
-    filesToUpload.forEach(file => {
-        formData.append('photos', file);
-    });
+    filesToUpload.forEach(file => formData.append('photos', file));
 
     try {
-        const response = await fetch('./admin/upload', {
+        const response = await fetch(`${SECRET_PATH}/admin/upload`, {
             method: 'POST',
             body: formData
         });
@@ -211,21 +214,34 @@ async function uploadPhotos() {
         const data = await response.json();
 
         if (data.success) {
-            alert(`Caricate ${data.uploaded} foto`);
+            alert(`✅ Caricate ${data.uploaded} foto`);
+            resetUpload();
             loadAdminPhotos();
         } else {
             alert('Errore upload');
+            resetUpload();
         }
 
     } catch (error) {
         alert('Errore: ' + error.message);
+        resetUpload();
     }
+}
+
+function resetUpload() {
+    filesToUpload = [];
+    document.getElementById('fileInput').value = '';
+    document.getElementById('selectedFiles').classList.remove('show');
+    const uploadBtn = document.getElementById('uploadBtn');
+    uploadBtn.classList.remove('show');
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = 'Carica Foto';
 }
 
 // Carica foto admin
 async function loadAdminPhotos() {
     try {
-        const response = await fetch('./admin/photos');
+        const response = await fetch(`${SECRET_PATH}/admin/photos`);
         const photos = await response.json();
 
         const photosGrid = document.getElementById('photosGrid');
@@ -240,22 +256,22 @@ async function loadAdminPhotos() {
 
         photosGrid.innerHTML = photos.map(photo => `
             <div class="admin-photo-card">
-                <img src="./foto/${photo}" alt="${photo}" loading="lazy">
-                <button onclick="deletePhoto('${photo}')">🗑️ Elimina</button>
+                <img src="${SECRET_PATH}/foto/${photo}" alt="${photo}" loading="lazy">
+                <button class="btn-delete" onclick="deletePhoto('${photo}')">🗑️ Elimina</button>
             </div>
         `).join('');
 
     } catch (error) {
-        console.error(error);
+        console.error('Errore caricamento foto admin:', error);
     }
 }
 
-// Elimina
+// Elimina foto
 async function deletePhoto(filename) {
     if (!confirm(`Eliminare ${filename}?`)) return;
 
     try {
-        const response = await fetch(`./admin/delete/${filename}`, {
+        const response = await fetch(`${SECRET_PATH}/admin/delete/${filename}`, {
             method: 'DELETE'
         });
 
@@ -263,19 +279,19 @@ async function deletePhoto(filename) {
 
         if (data.success) {
             loadAdminPhotos();
+        } else {
+            alert('Errore eliminazione');
         }
 
     } catch (error) {
-        alert('Errore eliminazione');
+        alert('Errore eliminazione: ' + error.message);
     }
 }
 
 // ==============================
 // INIZIALIZZAZIONE
 // ==============================
-
 document.addEventListener('DOMContentLoaded', function () {
-
     // Galleria pubblica
     if (document.getElementById('gallery')) {
         loadPhotos();
@@ -289,14 +305,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Admin
-    if (document.getElementById('loginForm')) {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
         if (sessionStorage.getItem('adminAuth') === 'true') {
             showAdminPanel();
         }
 
-        document
-            .getElementById('loginForm')
-            .addEventListener('submit', handleAdminLogin);
+        loginForm.addEventListener('submit', handleAdminLogin);
 
         const fileInput = document.getElementById('fileInput');
         if (fileInput) {
