@@ -16,7 +16,7 @@ const EXPIRATION_DATE = new Date('2026-03-02T23:59:59');
 const ADMIN_PASSWORD = 'admin123';
 
 // ==============================
-// 📂 PERCORSO PUBLIC CORRETTO
+// 📂 PERCORSO PUBLIC
 // ==============================
 const PUBLIC_PATH = path.join(__dirname, '../public');
 
@@ -55,75 +55,10 @@ const upload = multer({
 });
 
 // ==============================
-// 🔁 HOMEPAGE REDIRECT
+// 🔁 REDIRECT HOMEPAGE
 // ==============================
 app.get('/', (req, res) => {
   res.redirect(SECRET_PATH);
-});
-
-// ==============================
-// 🔐 AREA ADMIN
-// ==============================
-// LOGIN ADMIN
-app.post(`${SECRET_PATH}/admin/login`, (req, res) => {
-  const { password } = req.body;
-
-  if (password === ADMIN_PASSWORD) {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ success: false });
-  }
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
-});
-
-app.get('/admin-script.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin-script.js'));
-});
-
-app.get('/admin/photos', (req, res) => {
-  const photosDir = path.join(PUBLIC_PATH, 'foto');
-
-  if (!fs.existsSync(photosDir)) {
-    return res.json([]);
-  }
-
-  fs.readdir(photosDir, (err, files) => {
-    if (err) return res.json([]);
-
-    const photos = files.filter(file =>
-      /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
-    );
-
-    res.json(photos);
-  });
-});
-
-app.post('/admin/upload', upload.array('photos', 50), (req, res) => {
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ success: false });
-  }
-
-  res.json({
-    success: true,
-    uploaded: req.files.length,
-    files: req.files.map(f => f.filename)
-  });
-});
-
-app.delete('/admin/delete/:filename', (req, res) => {
-  const filePath = path.join(PUBLIC_PATH, 'foto', req.params.filename);
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ success: false });
-  }
-
-  fs.unlink(filePath, (err) => {
-    if (err) return res.status(500).json({ success: false });
-    res.json({ success: true });
-  });
 });
 
 // ==============================
@@ -139,10 +74,7 @@ app.use(SECRET_PATH, (req, res, next) => {
 // ==============================
 // 📂 FILE STATICI
 // ==============================
-app.use(
-  SECRET_PATH,
-  express.static(PUBLIC_PATH)
-);
+app.use(SECRET_PATH, express.static(PUBLIC_PATH));
 
 // ==============================
 // 📸 API FOTO PUBBLICHE
@@ -172,17 +104,78 @@ app.get(`${SECRET_PATH}/download/:filename`, (req, res) => {
   const filePath = path.join(PUBLIC_PATH, 'foto', req.params.filename);
 
   if (!fs.existsSync(filePath)) {
-    return res.status(404).send('Foto non trovata');
+    return res.status(404).json({ success: false });
   }
 
   res.download(filePath);
 });
 
 // ==============================
+// 🔐 AREA ADMIN
+// ==============================
+
+// LOGIN
+app.post(`${SECRET_PATH}/admin/login`, (req, res) => {
+  const { password } = req.body;
+
+  if (password === ADMIN_PASSWORD) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ success: false });
+  }
+});
+
+// LISTA FOTO ADMIN
+app.get(`${SECRET_PATH}/admin/photos`, (req, res) => {
+  const photosDir = path.join(PUBLIC_PATH, 'foto');
+
+  if (!fs.existsSync(photosDir)) {
+    return res.json([]);
+  }
+
+  fs.readdir(photosDir, (err, files) => {
+    if (err) return res.json([]);
+
+    const photos = files.filter(file =>
+      /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
+    );
+
+    res.json(photos);
+  });
+});
+
+// UPLOAD FOTO
+app.post(`${SECRET_PATH}/admin/upload`, upload.array('photos', 50), (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ success: false });
+  }
+
+  res.json({
+    success: true,
+    uploaded: req.files.length,
+    files: req.files.map(f => f.filename)
+  });
+});
+
+// DELETE FOTO
+app.delete(`${SECRET_PATH}/admin/delete/:filename`, (req, res) => {
+  const filePath = path.join(PUBLIC_PATH, 'foto', req.params.filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ success: false });
+  }
+
+  fs.unlink(filePath, (err) => {
+    if (err) return res.status(500).json({ success: false });
+    res.json({ success: true });
+  });
+});
+
+// ==============================
 // 🚫 BLOCCA TUTTO IL RESTO
 // ==============================
 app.use((req, res) => {
-  res.status(404).send('Accesso non consentito');
+  res.status(404).json({ success: false, message: 'Accesso non consentito' });
 });
 
 // ==============================
