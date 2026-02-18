@@ -13,7 +13,7 @@ app.use(express.json());
 // ==============================
 const SECRET_PATH = '/laurea-Red_Richard';
 const EXPIRATION_DATE = new Date('2026-03-02T23:59:59');
-const ADMIN_PASSWORD = 'admin123';
+const ADMIN_PASSWORD = 'RossiRiccardoInter';
 
 // ==============================
 // 📂 PERCORSO PUBLIC
